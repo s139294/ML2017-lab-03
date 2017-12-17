@@ -107,7 +107,7 @@ class AdaBoostClassifier:
     def get_report(self, X_test, y_test):
         #get the index of the highest value in validation_score_list
         idx = self.validation_score_list.index(max(self.validation_score_list))
-        pred_res = self.predict(X_test, use_first_k_clfs=-1)
+        pred_res = self.predict(X_test, use_first_k_clfs=idx)
         with open('report.txt', "wb") as f:
             repo=classification_report(y_test,pred_res,target_names=["face","nonface"])
             f.write(repo.encode())
