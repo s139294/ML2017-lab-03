@@ -59,11 +59,11 @@ class AdaBoostClassifier:
             self.w /= np.sum(self.w)
 
             if (X_val is not None) & (y_val is not None):
-                res = np.mean(self.predict(X_val)==y_val)
+                res = np.mean(self.predict(X_val, y=y_val)==y_val)
                 self.validation_score_list.append(res)
                 print('current validation accuracy: ', res)
 
-    def predict_scores(self, X, use_first_k_clfs):
+    def predict_scores(self, X):
         '''Calculate the weighted sum score of the whole base classifiers for given samples.
 
         Args:
@@ -72,16 +72,12 @@ class AdaBoostClassifier:
         Returns:
             An one-dimension ndarray indicating the scores of differnt samples, which shape should be (n_samples,1).
         '''
-        res = np.zeros((X.shape[0]))
-
-        k = len(self.weak_clf_list)
-        if use_first_k_clfs >= 0:
-            k = use_first_k_clfs
-        for i in range(k):
+        res = np.zeros((X.shape[0],))
+        for i in range(len(self.weak_clf_list)):
             res += self.weak_clf_list[i].predict(X) * self.alpha_list[i]
         return res
 
-    def predict(self, X, threshold=0, use_first_k_clfs=-1):#可以选择使用前k棵决策树进行预测（根据验证集的结果）
+    def predict(self, X, threshold=0, y=None):#可以选择使用前k棵决策树进行预测（根据验证集的结果）
         '''Predict the catagories for given samples.
 
         Args:
@@ -91,10 +87,13 @@ class AdaBoostClassifier:
         Returns:
             An ndarray consists of predicted labels, which shape should be (n_samples,1).
         '''
-        res = self.predict_scores(X, use_first_k_clfs)
+        res = self.predict_scores(X)
         res[res >= threshold]=1
         res[res < threshold]=-1
-        return res.reshape(-1,1)
+        res = res.reshape(-1,1)
+        if y is not None:
+            self.create_report(len(self.weak_clf_list), y, res)
+        return res
 
     def plotting(self):
         plt.title('Adaboost')
@@ -104,12 +103,9 @@ class AdaBoostClassifier:
         plt.grid()
         plt.show()
 
-    def get_report(self, X_test, y_test):
-        #get the index of the highest value in validation_score_list
-        idx = self.validation_score_list.index(max(self.validation_score_list))
-        pred_res = self.predict(X_test, use_first_k_clfs=idx)
-        with open('report.txt', "wb") as f:
-            repo=classification_report(y_test,pred_res,target_names=["face","nonface"])
+    def create_report(self, idx, y_true, y_pred):
+        with open('report'+str(idx)+'.txt', 'wb') as f:
+            repo=classification_report(y_true, y_pred, target_names=['face','nonface'])
             f.write(repo.encode())
 
     @staticmethod

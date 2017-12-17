@@ -49,9 +49,6 @@ if __name__ == "__main__":
     print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
     print('start training...')
-    ada_clf = AdaBoostClassifier(DecisionTreeClassifier(max_depth = 3),5)
+    ada_clf = AdaBoostClassifier(DecisionTreeClassifier(max_depth = 3),10)
     ada_clf.fit(X_train, y_train, X_test, y_test)
     ada_clf.plotting()
-
-    print('Writing report...')
-    ada_clf.get_report(X_test, y_test)
